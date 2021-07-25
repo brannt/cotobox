@@ -67,7 +67,7 @@ EXAMPLE
 
 _See code: [src/commands/sc.ts](https://github.com/brannt/cotobox-cli/blob/v0.0.0/src/commands/sc.ts)_
 
-## `ctb sc-tree [FILE]`
+## `ctb sc-tree [WORD]`
 
 Simulates the changes in the words across the language tree. The workdir should have a `tree.ctb.json` file describing the tree.
 

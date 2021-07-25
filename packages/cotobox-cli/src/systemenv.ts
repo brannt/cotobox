@@ -19,7 +19,9 @@ export class CliEnvironment implements ISystemEnvironment {
 
     execProgram(executable: string, parameters: string[]): Promise<string> {
         const exec = promisify(execFile);
-        return exec(join(this.workDir, executable), parameters)
+        // TODO: Fix for Windows
+        const fullPath = this.workDir == '.' ? `./${executable}` : join(this.workDir, executable);
+        return exec(fullPath, parameters)
             .then(res => { return res.stdout })
             .catch(res => { console.log(res.stderr); return res.stderr });
     };

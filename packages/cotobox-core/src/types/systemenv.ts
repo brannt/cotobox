@@ -1,7 +1,7 @@
 export interface ISystemEnvironment {
     workDir: string;
 
-    setWorkDir: (workDir?: string) => Promise<void>;
+    setWorkDir: (workDir?: string) => void;
 
     execProgram: (executable: string, parameters: string[]) => Promise<string>;
 
