@@ -1,7 +1,7 @@
-import type { ILanguageTreeRoot, ILanguageTreeNode, Word } from '../types';
+import type { ILanguageTreeNode, ILanguageTreeRoot, Word } from '../types';
 
 
-type SingleConvertResult = { langName: string, result: Word };
+export type SingleConvertResult = { langName: string, result: Word };
 
 export type ConvertResults = {
     ancestor: Word;

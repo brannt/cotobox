@@ -1,14 +1,13 @@
-import * as fs from 'fs'
-import cli from 'cli-ux'
-
 import { Command, flags } from '@oclif/command'
-
+import cli from 'cli-ux'
 import type { ISystemEnvironment } from 'cotobox-core'
-import { usecases, Registry, ExecutableSoundChangeSet, ZompistSCADialect } from 'cotobox-core'
+import { ExecutableSoundChangeSet, Registry, usecases, ZompistSCADialect } from 'cotobox-core'
+import * as fs from "fs"
 import { CliEnvironment } from '../systemenv'
 
-interface Deps { env: ISystemEnvironment, registry: Registry }
 
+
+interface Deps { env: ISystemEnvironment, registry: Registry }
 export default class ScTree extends Command {
   static description = 'describe the command here';
   static strict = false;
@@ -16,11 +15,15 @@ export default class ScTree extends Command {
   static flags = {
     help: flags.help({ char: 'h' }),
     workdir: flags.string(),
+    file: flags.string({char: 'f'}),
+    encoding: flags.string({char: 'e', default: 'utf-8'}),
+    languages: flags.string({char: 'l'}),
   }
 
   static args = [{ name: 'word' }];
 
   private deps: Deps = buildDeps();
+  private languagesToFilter?: string[];
 
   async run() {
     let { words } = this.handleArgs()
@@ -30,7 +33,7 @@ export default class ScTree extends Command {
 
     const results = await this.scTree(words);
 
-    const { table, headers } = prepTableFromResults(results)
+    const { table, headers } = prepTableFromResults(results, this.languagesToFilter)
     printTable(table, headers)
   }
 
@@ -42,7 +45,16 @@ export default class ScTree extends Command {
       this.deps.env.setWorkDir(flags.workdir);
     }
 
-    return { words: argv.slice() }
+    this.languagesToFilter = flags.languages?.split(',');
+
+    if (flags.file) {
+      // read from stdin if '-' is passed
+      let fileName = flags.file == '-' ? process.stdin.fd : flags.file;
+      let content = fs.readFileSync(fileName, {encoding: flags.encoding as BufferEncoding}).toString();
+      return { words : content.split('\n').filter(l => l != '') }
+    }
+
+    return { words: argv.slice()}
   }
 
   async inputWords(): Promise<string[]> {
@@ -57,11 +69,11 @@ export default class ScTree extends Command {
     return words
   }
 
-  async scTree(words: string[]) {
-    const builder = new usecases.TreeBuilder(this.deps.registry);
+  async scTree(words: string[]): Promise<usecases.ConvertResults[]> {
+    const treeBuilder = new usecases.TreeBuilder(this.deps.registry);
 
     const treedef = JSON.parse(await this.deps.env.loadFile('tree.ctb.json', 'utf-8'));
-    const res = builder.build(treedef);
+    const res = treeBuilder.build(treedef);
     if (!res.ok) {
       throw new Error(res.error);
     }
@@ -80,9 +92,13 @@ function buildDeps(): Deps {
   return { env: env, registry: registry }
 }
 
-function prepTableFromResults(results: usecases.ConvertResults[]): { table: Object[], headers: string[] } {
-  const headers = ['ancestor'].concat(results[0].results.map(x => x.langName));
-  const table = results.map(x => Object.fromEntries([['ancestor', x.ancestor]].concat(x.results.map(r => [r.langName, r.result]))))
+function prepTableFromResults(results: usecases.ConvertResults[], languagesToFilter?: string[]): { table: Object[], headers: string[] } {
+  let flt: (r: usecases.SingleConvertResult) => boolean = r => true;
+  if (languagesToFilter) {
+    flt = r => languagesToFilter.indexOf(r.langName) !== -1
+  }
+  const headers = ['ancestor'].concat(results[0].results.filter(flt).map(x => x.langName));
+  const table = results.map(x => Object.fromEntries([['ancestor', x.ancestor]].concat(x.results.filter(flt).map(r => [r.langName, r.result]))))
   return { headers: headers, table: table }
 }
 

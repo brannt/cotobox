@@ -13,6 +13,7 @@ export default class SoundChange extends Command {
   static flags = {
     help: flags.help({ char: 'h' }),
     workdir: flags.string(),
+    file: flags.string({char: 'f'})
   }
 
   static args = [{ name: 'langFrom' }, { name: 'langTo' }]

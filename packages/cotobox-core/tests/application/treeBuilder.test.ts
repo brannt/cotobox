@@ -1,6 +1,6 @@
-import { Registry } from '../../src/registry'
-import { ISoundChangeSet, ISystemEnvironment, ILanguageTreeRoot } from '../../src'
-import { TreeBuilder } from '../../src/application/treeBuilder'
+import { ILanguageTreeRoot, ISoundChangeSet, ISystemEnvironment } from '../../src';
+import { TreeBuilder } from '../../src/application/treeBuilder';
+import { Registry } from '../../src/registry';
 
 const TEST_TREEDEF = {
     "name": "protean",
@@ -31,6 +31,14 @@ class MockEnv implements ISystemEnvironment {
     }
 
     writeFile(): Promise<void> {
+        return Promise.resolve()
+    }
+
+    setWorkDir(): Promise<void> {
+        return Promise.resolve()
+    }
+
+    deleteFile(): Promise<void> {
         return Promise.resolve()
     }
 }
